@@ -1,0 +1,4 @@
+/* Directives Tailwind CSS — obligatoires pour que Tailwind fonctionne */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
