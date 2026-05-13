@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import CVUploader from './CVUploader';
 import CVGenerator from './CVGenerator';
 
-const BACKEND_URL = 'http://localhost:5000';
+import { BACKEND_URL } from '../services/api';
 
 // Fonction pour enlever les astérisques markdown
 const cleanText = (text) => {

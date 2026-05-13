@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { jsPDF } from 'jspdf';
+import { BACKEND_URL } from '../services/api';
 
 const CVGenerator = ({ messages, language }) => {
 
@@ -11,9 +12,6 @@ const CVGenerator = ({ messages, language }) => {
   const [cvData, setCvData] = useState(null);
   const [error, setError] = useState('');
 
-  // ============================================
-  // Extraire les infos candidat depuis le chat
-  // ============================================
   const extractCandidateInfo = () => {
     const fullConversation = messages
       .map(m => `${m.role === 'user' ? 'Candidat' : 'Sarah'}: ${m.content}`)
@@ -21,9 +19,6 @@ const CVGenerator = ({ messages, language }) => {
     return { conversation: fullConversation };
   };
 
-  // ============================================
-  // Générer le CV avec l'IA
-  // ============================================
   const handleGenerate = async () => {
     setIsGenerating(true);
     setError('');
@@ -31,7 +26,7 @@ const CVGenerator = ({ messages, language }) => {
     try {
       const candidateInfo = extractCandidateInfo();
 
-      const response = await fetch('http://localhost:5000/api/cv/generate', {
+      const response = await fetch(`${BACKEND_URL}/api/cv/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ candidateInfo, language }),
@@ -52,9 +47,6 @@ const CVGenerator = ({ messages, language }) => {
     setIsGenerating(false);
   };
 
-  // ============================================
-  // Télécharger le CV en PDF
-  // ============================================
   const handleDownloadPDF = () => {
     if (!cvData) return;
 
@@ -62,29 +54,25 @@ const CVGenerator = ({ messages, language }) => {
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 0;
 
-    // --- Couleurs ---
     const bleu = [37, 99, 235];
     const gris = [100, 116, 139];
     const noir = [15, 23, 42];
     const blanc = [255, 255, 255];
     const bleuClair = [239, 246, 255];
 
-    // ── HEADER ──
+    // HEADER
     doc.setFillColor(...bleu);
     doc.rect(0, 0, pageWidth, 45, 'F');
 
-    // Nom
     doc.setTextColor(...blanc);
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.text(cvData.nom || 'Candidat', 15, 18);
 
-    // Titre
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.text(cvData.titre || '', 15, 28);
 
-    // Contact
     doc.setFontSize(9);
     const contact = [
       cvData.email !== 'N/A' ? `✉ ${cvData.email}` : '',
@@ -95,7 +83,6 @@ const CVGenerator = ({ messages, language }) => {
 
     y = 55;
 
-    // ── FONCTION helper : titre de section ──
     const sectionTitle = (title) => {
       doc.setFillColor(...bleuClair);
       doc.rect(10, y - 5, pageWidth - 20, 10, 'F');
@@ -106,7 +93,7 @@ const CVGenerator = ({ messages, language }) => {
       y += 10;
     };
 
-    // ── PROFIL ──
+    // PROFIL
     if (cvData.profil) {
       sectionTitle(language === 'en' ? 'PROFESSIONAL PROFILE' : 'PROFIL PROFESSIONNEL');
       doc.setTextColor(...noir);
@@ -117,7 +104,7 @@ const CVGenerator = ({ messages, language }) => {
       y += profilLines.length * 6 + 8;
     }
 
-    // ── EXPÉRIENCE ──
+    // EXPÉRIENCE
     if (cvData.experience?.length > 0) {
       sectionTitle(language === 'en' ? 'WORK EXPERIENCE' : 'EXPÉRIENCE PROFESSIONNELLE');
       cvData.experience.forEach(exp => {
@@ -141,7 +128,7 @@ const CVGenerator = ({ messages, language }) => {
       y += 3;
     }
 
-    // ── FORMATION ──
+    // FORMATION
     if (cvData.formation?.length > 0) {
       sectionTitle(language === 'en' ? 'EDUCATION' : 'FORMATION');
       cvData.formation.forEach(f => {
@@ -161,7 +148,7 @@ const CVGenerator = ({ messages, language }) => {
       y += 3;
     }
 
-    // ── COMPÉTENCES ──
+    // COMPÉTENCES
     if (cvData.competences?.length > 0) {
       sectionTitle(language === 'en' ? 'SKILLS' : 'COMPÉTENCES');
       doc.setTextColor(...noir);
@@ -173,7 +160,7 @@ const CVGenerator = ({ messages, language }) => {
       y += skillLines.length * 6 + 8;
     }
 
-    // ── LANGUES ──
+    // LANGUES
     if (cvData.langues?.length > 0) {
       sectionTitle(language === 'en' ? 'LANGUAGES' : 'LANGUES');
       doc.setTextColor(...noir);
@@ -183,7 +170,7 @@ const CVGenerator = ({ messages, language }) => {
       y += 10;
     }
 
-    // ── QUALITÉS ──
+    // QUALITÉS
     if (cvData.qualites?.length > 0) {
       sectionTitle(language === 'en' ? 'QUALITIES' : 'QUALITÉS');
       doc.setTextColor(...noir);
@@ -192,23 +179,19 @@ const CVGenerator = ({ messages, language }) => {
       doc.text(cvData.qualites.join('   •   '), 15, y);
     }
 
-    // --- Télécharger ---
     const fileName = `CV_${(cvData.nom || 'candidat').replace(/\s+/g, '_')}.pdf`;
     doc.save(fileName);
   };
 
-  // ============================================
-  // AFFICHAGE
-  // ============================================
   const t = {
     fr: {
       title: '📄 Générer mon CV PDF',
-      subtitle: 'L\'IA crée un CV professionnel basé sur votre entretien',
-      generate: '✨ Générer mon CV avec l\'IA',
+      subtitle: "L'IA crée un CV professionnel basé sur votre entretien",
+      generate: "✨ Générer mon CV avec l'IA",
       generating: 'Génération en cours...',
       download: '⬇️ Télécharger le PDF',
       preview: 'Aperçu du CV généré',
-      warning: '⚠️ Complétez d\'abord quelques étapes de l\'entretien pour obtenir un meilleur CV.'
+      warning: "⚠️ Complétez d'abord quelques étapes de l'entretien pour obtenir un meilleur CV."
     },
     en: {
       title: '📄 Generate my PDF CV',
@@ -235,6 +218,7 @@ const CVGenerator = ({ messages, language }) => {
 
   return (
     <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 max-w-2xl mx-auto">
+
       <h2 className="text-white text-xl font-bold mb-1">{text.title}</h2>
       <p className="text-slate-400 text-sm mb-6">{text.subtitle}</p>
 
@@ -262,6 +246,7 @@ const CVGenerator = ({ messages, language }) => {
         </button>
       ) : (
         <div className="space-y-4">
+
           {/* Aperçu */}
           <div className="bg-slate-700 rounded-xl p-4 border border-slate-600">
             <h3 className="text-blue-400 font-semibold mb-3">{text.preview}</h3>
