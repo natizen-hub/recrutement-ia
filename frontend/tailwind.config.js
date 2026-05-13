@@ -1,6 +1,7 @@
+// Configuration TailwindCSS
+// Indique quels fichiers utiliser les classes Tailwind
 /** @type {import('tailwindcss').Config} */
 export default {
-  // Indique à Tailwind quels fichiers scanner pour les classes CSS
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -10,4 +11,3 @@ export default {
   },
   plugins: [],
 }
-
